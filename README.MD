@@ -1,9 +1,5 @@
 # Superheroes
 
-In this repo, there is a Flask application with some features built out. There
-is also a fully built React frontend application, so you can test if your API is
-working.
-
 Your job is to build out the Flask API to add the functionality described in the
 deliverables below.
 
