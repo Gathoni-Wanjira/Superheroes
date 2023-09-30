@@ -36,3 +36,5 @@ class Power (db.model):
     created_at = db.Column(db.DateTime)
     updated_at = db.Column(db.DateTime)
     
+    
+    heroes = db.relationship('Hero_power', backref='power', lazy=True)
