@@ -11,7 +11,7 @@ class Hero (db.Model):
     created_at = db.Column(db.DateTime)
     updated_at = db.Column(db.DateTime)
     
-    hero_powers = db.relationship('Hero_power', backref='hero', lazy=True)
+    powers = db.relationship('Hero_power', back_populates='hero', lazy=True)
     
     
 class Hero_power (db.Model):
@@ -24,8 +24,8 @@ class Hero_power (db.Model):
     created_at = db.Column(db.DateTime)
     updated_at = db.Column(db.DateTime)
     
-    hero = db.relationship('Hero', backref='hero_powers')
-    power = db.relationship('Power', backref='hero_powers')
+    hero = db.relationship('Hero', back_populates='powers')
+    power = db.relationship('Power', back_populates='heroes')
     
 class Power (db.Model):
     __tablename__ = "powers"
@@ -37,6 +37,6 @@ class Power (db.Model):
     updated_at = db.Column(db.DateTime)
     
     
-    heroes = db.relationship('Hero_power', backref='power', lazy=True)
+    heroes = db.relationship('Hero_power', back_populates='power', lazy=True)
     
     
