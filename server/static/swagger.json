@@ -1,0 +1,296 @@
+{
+    "openapi": "3.0.1",
+    "info": {
+        "description": "Powers and Heroes",
+        "version": "1.1.1",
+        "title": "SuperHeroes Restful Api",
+        "license": {
+            "name": "APACHE",
+            "url": "https://opensource.org/license/MIT"
+        }
+    },
+    "tags": [
+        {
+            "name": "POWERS && HEROES",
+            "description": "RESTFUL API"
+        }
+    ],
+    "servers": [
+        {
+            "url": "/"
+        }
+    ],
+    "components": {
+        "schemas": {
+            "Hero": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "super_name": {
+                        "type": "string"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "HeroPower": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "strength": {
+                        "type": "string",
+                        "enum": [
+                            "Strong",
+                            "Weak",
+                            "Average"
+                        ]
+                    },
+                    "hero_id": {
+                        "type": "integer"
+                    },
+                    "power_id": {
+                        "type": "integer"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            },
+            "Power": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                }
+            }
+        }
+    },
+    "paths": {
+        "/heroes": {
+            "get": {
+                "tags": ["POWERS && HEROES"],
+                "summary": "Get all heroes",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Hero"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/heroes/{id}": {
+            "get": {
+                "tags": ["POWERS && HEROES"],
+                "summary": "Get a hero by ID",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "ID of the hero"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Hero"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Hero not found"
+                    }
+                }
+            }
+        },
+        "/powers": {
+            "get": {
+                "tags": ["POWERS && HEROES"],
+                "summary": "Get all powers",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/Power"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/powers/{id}": {
+            "patch": {
+                "tags": ["POWERS && HEROES"],
+                "summary": "Update a power by ID",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "ID of the power"
+                    }
+                ],
+                "requestBody": {
+                    "description": "Updated power data",
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "description": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Power"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Power not found"
+                    },
+                    "400": {
+                        "description": "Validation errors",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "errors": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/hero_powers": {
+            "get": {
+                "tags": ["POWERS && HEROES"],
+                "summary": "Get all hero powers",
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/HeroPower"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/hero_powers/{id}": {
+            "get": {
+                "tags": ["POWERS && HEROES"],
+                "summary": "Get a hero power by ID",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "description": "ID of the hero power"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HeroPower"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Hero power not found"
+                    }
+                }
+            }
+        }
+    }
+}

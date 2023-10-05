@@ -1,116 +1,128 @@
-from flask import Flask , jsonify , request, make_response
-from models import db , Power , Hero , Hero_power
-from flask_migrate import Migrate
-from flask_cors import CORS
-from flask_restful import Api, Resource
-from flask_marshmallow import Marshmallow
+#!/usr/bin/env python3
 
-# /heroes ,/heroes/:id, /powers , /powers/:id ,patch /powers/:id, post /hero_powers , 
+from flask import Flask, make_response, jsonify, redirect, request
+from flask_migrate import Migrate
+from flask_restful import Api, Resource
+from flask_swagger_ui import get_swaggerui_blueprint
+
+from models import db, Hero, Power, Hero_power
 
 app = Flask(__name__)
-CORS(app)
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///superheroes.db"
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///heroes.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+SWAGGER_URL = '/swagger'
+API_URL = '/static/swagger.json'
+SWAGGER_BLUEPRINT = get_swaggerui_blueprint(
+    SWAGGER_URL,
+    API_URL,
+    config = {
+        'app_name': "SuperHeroes Api"
+    }
+)
+
+app.register_blueprint(SWAGGER_BLUEPRINT, url_prefix = SWAGGER_URL)
+
 migrate = Migrate(app, db)
+
 db.init_app(app)
 api = Api(app)
-ma = Marshmallow(app)
 
+@app.route('/')
+def home():
+    response_body = {
+        "Message": "Welcome to the world of heroes"
+    }
+    return redirect(SWAGGER_URL), 200
+class HeroesEndpoint(Resource):
+    def get(self):
+        heroes = Hero.query.all()
+        serialized_heroes = [{'id': hero.id, 'name': hero.name, 'super_name': hero.super_name} for hero in heroes]
+        return jsonify(serialized_heroes)
 
-class HeroSchema (ma.SQLAlchemyAutoSchema):
-    class Meta:
-        model = Hero
-        fields = ("id","name","super_name")
-hero_schema = HeroSchema()
-heroes_schema = HeroSchema(many = True)
+class HeroesById(Resource):
+    def get(self, id):
+        hero = db.session.query(Hero).get(id)
+        if hero:
+            serialized_hero = hero.to_dict()
+            return make_response(jsonify(serialized_hero))
+        else:
+            return {'error': 'Hero not found'}, 404
 
-class PowerSchema (ma.SQLAlchemyAutoSchema):
-    class Meta:
-        model = Power
-        fields = ("id","name","description")
-power_schema = PowerSchema()
-powers_schema = PowerSchema(many = True)
+# Define routes for Power model
+class PowersEndpoint(Resource):
+    def get(self):
+        powers = Power.query.all()
+        serialized_powers = [{'id': power.id, 'name': power.name, 'description': power.description} for power in powers]
+        return jsonify(serialized_powers)
 
-class Index (Resource):
-    def get (self):
-        return make_response(
-            jsonify({"message": "Superheroes Api"})
-        )
-api.add_resource(Index, "/")
-        
-class Heroes(Resource):
-    def get (self):
-        heroes = heroes_schema.dump(Hero.query.all())
-        return make_response(
-            jsonify(heroes),
-            200
-        )
-        
+class PowersById(Resource):
+    def get(self, id):
+        power = Power.query.get(id)
+        if power:
+            serialized_power = {
+                'id': power.id,
+                'name': power.name,
+                'description': power.description
+            }
+            return jsonify(serialized_power)
+        else:
+            return {'error': 'Power not found'}, 404
 
-api.add_resource(Heroes, "/heroes")
+# Define route for updating Power
+class UpdatePower(Resource):
+    def patch(self, id):
+        power = Power.query.get(id)
+        if power:
+            data = request.get_json()
+            if 'description' in data:
+                power.description = data['description']
 
+                try:
+                    db.session.commit()
+                    return jsonify({
+                        'id': power.id,
+                        'name': power.name,
+                        'description': power.description
+                    })
+                except Exception as e:
+                    return {'errors': ['Validation errors']}, 400
 
-class HeroById(Resource):
-    def get (self,id):
-        hero = Hero.query.filter_by(id = id).first()
-        if not hero:
-            return make_response(
-                jsonify({ "error": "Hero not found"}), 
-                200
-            )
-        hero_serial = hero_schema.dump(Hero.query.filter_by(id = id).first())
-        hero_serial["powers"] = [power_schema.dump(power.power) for power in hero.powers]
-        return make_response(
-            jsonify(hero_serial),
-            200
-        )
-        
+        return {'error': 'Power not found'}, 404
 
-api.add_resource(HeroById, "/heroes/<int:id>")
+# Define route for creating HeroPower
+class HeroPowersEndPoint(Resource):
+    def get(self):
+        hero_powers = Hero_power.query.all()
+        serialized_hero_powers = [hero_power.to_dict() for hero_power in hero_powers]
+        return serialized_hero_powers
 
-# class Heroes(Resource):
-#     def get (self):
-#         heroes = heroes_schema.dump(Hero.query.all())
-#         return make_response(
-#             jsonify(heroes),
-#             200
-#         )
-        
+    def post(self):
+        data = request.get_json()
+        new_hero_power = Hero_power(**data)
 
-# api.add_resource(Heroes, "/heroes")
+        try:
+            db.session.add(new_hero_power)
+            db.session.commit()
+            return HeroesById().get(new_hero_power.hero_id)  # Return the related Hero data
+        except Exception as e:
+            return {'errors': ['Validation errors']}, 400
+class HeroPowerById(Resource):
+    def get(self, id):
+        hero_power = Hero_power.query.get(id)
+        if hero_power:
+            serialized_hero_power = hero_power.to_dict()  # Assuming you have a to_dict() method in your Hero_power model
+            return jsonify(serialized_hero_power)
+        else:
+            return {'error': 'Hero power not found'}, 404
 
-# class Heroes(Resource):
-#     def get (self):
-#         heroes = heroes_schema.dump(Hero.query.all())
-#         return make_response(
-#             jsonify(heroes),
-#             200
-#         )
-        
-
-# api.add_resource(Heroes, "/heroes")
-
-# class Heroes(Resource):
-#     def get (self):
-#         heroes = heroes_schema.dump(Hero.query.all())
-#         return make_response(
-#             jsonify(heroes),
-#             200
-#         )
-        
-
-# api.add_resource(Heroes, "/heroes")
-
-
-
-# @app.route('/')
-# def check():
-#     return "Hello world"
-
-
+# Add the route to the API
+api.add_resource(HeroPowerById, '/hero_powers/<int:id>')
+api.add_resource(HeroesEndpoint, '/heroes')
+api.add_resource(HeroesById, '/heroes/<int:id>')
+api.add_resource(PowersEndpoint, '/powers')
+api.add_resource(PowersById, '/powers/<int:id>')
+api.add_resource(HeroPowersEndPoint, '/hero_powers')
 
 if __name__ == '__main__':
-    app.run(port=5555, debug=True)
-    
-    
-    
+    app.run(port=5555)
